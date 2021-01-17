@@ -1,0 +1,22 @@
+{
+  "pluginAlias": "JVCProjector",
+  "pluginType": "platform",
+  "singular": false,
+  "schema": {
+    "type": "object",
+    "required": [
+      "projector_ip"
+    ],
+    "additionalProperties": true,
+    "properties": {
+      "projector_ip": {
+        "type": "string",
+        "description": "The IP of a JVC projector supporting control over Ethernet based IP."
+      },
+      "python_path": {
+        "type": "string",
+        "description": "The path to python for invoking JVC IP API. Default is '/usr/bin/python'."
+      }
+    }
+  }
+}
