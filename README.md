@@ -14,9 +14,10 @@ This plugin is a simple wrapper around an existing [Python JVC integration proje
 Example `config.json` entry:
 
 ```
-"platforms": [
+"accessories": [
     {
-        "platform": "JVCProjector",
+        "accessory": "JvcProjectorStandby",
+        "name": "projector",
         "projector_ip": "192.168.10.10",
         "python_path": "/usr/local/python"
     }
@@ -24,6 +25,7 @@ Example `config.json` entry:
 ```
 Where:
 
+* `name` is the name for the accessory instance.
 * `projector_ip` is the IP of a JVC projector supporting control over Ethernet based IP.
 * `python_path` is the path to python for invoking JVC IP API. Default is `/usr/bin/python`.
 

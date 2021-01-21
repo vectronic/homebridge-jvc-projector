@@ -1,14 +1,19 @@
 {
-  "pluginAlias": "JVCProjector",
-  "pluginType": "platform",
+  "pluginAlias": "JvcProjectorStandby",
+  "pluginType": "accessory",
   "singular": false,
   "schema": {
     "type": "object",
     "required": [
+      "name",
       "projector_ip"
     ],
     "additionalProperties": true,
     "properties": {
+      "name": {
+        "type": "string",
+        "description": "Name of the accessory instance."
+      },
       "projector_ip": {
         "type": "string",
         "description": "The IP of a JVC projector supporting control over Ethernet based IP."
