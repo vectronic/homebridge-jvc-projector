@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "JvcProjectorStandby",
+  "pluginAlias": "JvcProjectorPower",
   "pluginType": "accessory",
   "singular": false,
   "schema": {
@@ -16,11 +16,19 @@
       },
       "projector_ip": {
         "type": "string",
-        "description": "The IP of a JVC projector supporting control over Ethernet based IP."
+        "description": "IP of a JVC projector supporting control over Ethernet based IP."
       },
       "python_path": {
         "type": "string",
-        "description": "The path to python for invoking JVC IP API. Default is '/usr/bin/python'."
+        "description": "Path to python for invoking JVC IP API. Default is '/usr/bin/python'."
+      },
+      "poll_interval": {
+        "type": "integer",
+        "description": "Polling interval in seconds for the power state. Default is 3."
+      },
+      "connection_delay_interval": {
+        "type": "integer",
+        "description": "Delay in seconds between consecutive connections to the projector. Default is 1."
       }
     }
   }

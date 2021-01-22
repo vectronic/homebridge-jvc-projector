@@ -10,24 +10,31 @@ import {
     Logging,
     Service
 } from 'homebridge';
-
+import { Mutex } from 'async-mutex';
 import path from 'path';
-import { exec } from 'child_process';
+import sleep from 'await-sleep';
+import { execSync } from 'child_process';
 
 let hap: HAP;
 
 
-class JvcProjectorStandby implements AccessoryPlugin {
+class JvcProjectorPower implements AccessoryPlugin {
 
     private readonly log: Logging;
     private readonly name: string;
     private readonly pythonPath: string;
     private readonly projectorIp: string;
-    private readonly standbyScript: string;
+    private readonly setPowerScript: string;
+    private readonly getPowerScript: string;
+    private readonly pollInterval: number;
+    private readonly connectionDelayInterval: number;
 
-    private switchOn = false;
     private readonly switchService: Service;
     private readonly informationService: Service;
+
+    private readonly pythonMutex = new Mutex();
+
+    private power = false;
 
     constructor(log: Logging, config: AccessoryConfig) {
         this.log = log;
@@ -35,44 +42,57 @@ class JvcProjectorStandby implements AccessoryPlugin {
 
         this.projectorIp = config.projector_ip;
         this.pythonPath = config.python_path || '/usr/bin/python';
-        this.standbyScript = path.join(__dirname, 'standby.py');
+        this.pollInterval = config.poll_interval || 3;
+        this.connectionDelayInterval = config.connection_delay_interval || 1;
+
+        this.setPowerScript = path.join(__dirname, 'set_power_state.py');
+        this.getPowerScript = path.join(__dirname, 'get_power_state.py');
 
         this.log(`projectorIp: ${this.projectorIp}`);
         this.log(`pythonPath: ${this.pythonPath}`);
-        this.log(`standbyScript: ${this.standbyScript}`);
+        this.log(`setPowerScript: ${this.setPowerScript}`);
+        this.log(`getPowerScript: ${this.getPowerScript}`);
 
         this.switchService = new hap.Service.Switch(this.name);
         this.switchService.getCharacteristic(hap.Characteristic.On)
             .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                log.info('Current state of the switch was returned: ' + (this.switchOn? 'ON': 'OFF'));
-                callback(undefined, this.switchOn);
+                log.info('Returning projector power: ' + (this.power? 'ON': 'OFF'));
+                callback(undefined, this.power);
             })
-            .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
+            .on(CharacteristicEventTypes.SET, async (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
 
-                this.switchOn = value as boolean;
+                const newPower = value as boolean;
 
-                log.info('Setting switch state to: ' + (this.switchOn? 'ON': 'OFF'));
+                log.info('Setting projector power: ' + (newPower ? 'ON': 'OFF'));
 
-                exec(`${this.pythonPath} ${this.standbyScript} ${this.projectorIp} ${
-                    this.switchOn? 'ON': 'OFF'}`, (error, stdout, stderr) => {
-                    log.debug(`standby stdout: ${stdout}`);
-                    log.debug(`standby stderr: ${stderr}`);
-
-                    if (error) {
-                        log.error(`standby exec error: ${error}`);
-                        callback(error);
-                        return;
+                await this.pythonMutex.acquire();
+                try {
+                    execSync(`${this.pythonPath} ${this.setPowerScript} ${this.projectorIp} ${newPower ? 'ON': 'OFF'}`);
+                } catch (err) {
+                    log.error(`set_power_state exec error: ${err}`);
+                    callback(err);
+                    return;
+                } finally {
+                    try {
+                        await sleep(this.connectionDelayInterval * 1000);
+                    } catch (err) {
+                        log.warn(`set_power_state delay error: ${err}`);
                     }
+                    this.pythonMutex.release();
+                }
 
-                    log.info('Switch state set to: ' + (this.switchOn? 'ON': 'OFF'));
-                    callback();
-                });
+                this.power = newPower;
+
+                log.info('Projector power set to: ' + (this.power ? 'ON': 'OFF'));
+                callback();
             });
 
         this.informationService = new hap.Service.AccessoryInformation()
             .setCharacteristic(hap.Characteristic.Manufacturer, 'Vectronic');
 
-        log.info('Switch finished initializing!');
+        this.startStateTimeout();
+
+        log.info('Projector finished initializing!');
     }
 
     identify(): void {
@@ -85,6 +105,39 @@ class JvcProjectorStandby implements AccessoryPlugin {
             this.switchService
         ];
     }
+
+    startStateTimeout(): void {
+
+        const stateTimeout = setTimeout(async () => {
+            await this.pythonMutex.acquire();
+            try {
+
+                const powerStr = execSync(`${this.pythonPath} ${this.getPowerScript} ${this.projectorIp}`);
+                const actualPower = powerStr.toString().startsWith('ON');
+                
+                if (actualPower !== this.power) {
+                    this.power = actualPower;
+
+                    this.switchService.getCharacteristic(hap.Characteristic.On).updateValue(this.power);
+
+                    this.log.info('Projector power state updated to: ' + (this.power ? 'ON': 'OFF'));
+                }
+            } catch (err) {
+                this.log.error(`stateTimeout error: ${err}`);
+            } finally {
+                try {
+                    await sleep(this.connectionDelayInterval * 1000);
+                } catch (err) {
+                    this.log.warn(`state timeout delay error: ${err}`);
+                }
+                this.pythonMutex.release();
+            }
+
+            this.startStateTimeout();
+        }, this.pollInterval * 1000);
+
+        stateTimeout.unref();
+    }
 }
 
 /*
@@ -92,5 +145,5 @@ class JvcProjectorStandby implements AccessoryPlugin {
  */
 export = (api: API) => {
     hap = api.hap;
-    api.registerAccessory('JvcProjectorStandby', JvcProjectorStandby);
+    api.registerAccessory('JvcProjectorPower', JvcProjectorPower);
 };
