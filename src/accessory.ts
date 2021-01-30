@@ -13,7 +13,7 @@ import {
 import { Mutex } from 'async-mutex';
 import path from 'path';
 import sleep from 'await-sleep';
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 
 let hap: HAP;
 
@@ -67,7 +67,16 @@ class JvcProjectorPower implements AccessoryPlugin {
 
                 await this.pythonMutex.acquire();
                 try {
-                    execSync(`${this.pythonPath} ${this.setPowerScript} ${this.projectorIp} ${newPower ? 'ON': 'OFF'}`);
+                    await new Promise((resolve, reject) => {
+                        exec(`${this.pythonPath} ${this.setPowerScript} ${this.projectorIp} ${newPower ? 'ON': 'OFF'}`, {},
+                            (error, stdout) => {
+                                if (error) {
+                                    reject(error);
+                                    return;
+                                }
+                                resolve(stdout);
+                            });
+                    });
                 } catch (err) {
                     log.error(`set_power_state exec error: ${err}`);
                     callback(err);
@@ -110,9 +119,19 @@ class JvcProjectorPower implements AccessoryPlugin {
 
         const stateTimeout = setTimeout(async () => {
             await this.pythonMutex.acquire();
+            
+            let powerStr;
             try {
-
-                const powerStr = execSync(`${this.pythonPath} ${this.getPowerScript} ${this.projectorIp}`);
+                powerStr = await new Promise((resolve, reject) => {
+                    exec(`${this.pythonPath} ${this.getPowerScript} ${this.projectorIp}`, {},
+                        (error, stdout) => {
+                            if (error) {
+                                reject(error);
+                                return;
+                            }
+                            resolve(stdout);
+                        });
+                });
                 const actualPower = powerStr.toString().startsWith('ON');
                 
                 if (actualPower !== this.power) {
