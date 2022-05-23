@@ -8,7 +8,7 @@ This plugin is a simple wrapper around an existing [Python JVC integration proje
 1. Install this plugin: `npm install -g homebridge-jvc-projector`
 1. Update your configuration file. See a sample `config.json` snippet below.
 1. Ensure `python` is installed and on the path
-2. Install the python project: `pip install jvc_projector_remote`
+2. Install the python project: `pip install -e git+https://github.com/bezmi/jvc_projector.git#egg=jvc-projector-remote`
 
 # Configuration
 Example `config.json` entry:
