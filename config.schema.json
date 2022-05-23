@@ -18,6 +18,10 @@
         "type": "string",
         "description": "IP of a JVC projector supporting control over Ethernet based IP."
       },
+      "projector_password": {
+        "type": "string",
+        "description": "Optional network password for JVC projector."
+      },
       "python_path": {
         "type": "string",
         "description": "Path to python for invoking JVC IP API. Default is '/usr/bin/python'."

@@ -24,6 +24,7 @@ class JvcProjectorPower implements AccessoryPlugin {
     private readonly name: string;
     private readonly pythonPath: string;
     private readonly projectorIp: string;
+    private readonly projectorPassword: string;
     private readonly setPowerScript: string;
     private readonly getPowerScript: string;
     private readonly pollInterval: number;
@@ -41,6 +42,7 @@ class JvcProjectorPower implements AccessoryPlugin {
         this.name = config.name;
 
         this.projectorIp = config.projector_ip;
+        this.projectorPassword = config.projector_password;
         this.pythonPath = config.python_path || '/usr/bin/python';
         this.pollInterval = config.poll_interval || 3;
         this.connectionDelayInterval = config.connection_delay_interval || 1;
@@ -49,6 +51,9 @@ class JvcProjectorPower implements AccessoryPlugin {
         this.getPowerScript = path.join(__dirname, 'get_power_state.py');
 
         this.log(`projectorIp: ${this.projectorIp}`);
+        if (this.projectorPassword) {
+            this.log('projectorPassword is configured');
+        }
         this.log(`pythonPath: ${this.pythonPath}`);
         this.log(`setPowerScript: ${this.setPowerScript}`);
         this.log(`getPowerScript: ${this.getPowerScript}`);
@@ -68,7 +73,7 @@ class JvcProjectorPower implements AccessoryPlugin {
                 await this.pythonMutex.acquire();
                 try {
                     await new Promise((resolve, reject) => {
-                        exec(`${this.pythonPath} ${this.setPowerScript} ${this.projectorIp} ${newPower ? 'ON': 'OFF'}`, {},
+                        exec(`${this.pythonPath} ${this.setPowerScript} ${this.projectorIp} ${newPower ? 'ON': 'OFF'} ${this.projectorPassword ? this.projectorPassword : ''}`, {},
                             (error, stdout) => {
                                 if (error) {
                                     reject(error);
@@ -123,7 +128,7 @@ class JvcProjectorPower implements AccessoryPlugin {
             let powerStr;
             try {
                 powerStr = await new Promise((resolve, reject) => {
-                    exec(`${this.pythonPath} ${this.getPowerScript} ${this.projectorIp}`, {},
+                    exec(`${this.pythonPath} ${this.getPowerScript} ${this.projectorIp} ${this.projectorPassword ? this.projectorPassword : ''}`, {},
                         (error, stdout) => {
                             if (error) {
                                 reject(error);

@@ -19,6 +19,7 @@ Example `config.json` entry:
         "accessory": "JvcProjectorPower",
         "name": "projector",
         "projector_ip": "192.168.10.10",
+        "projector_password": "xxx",
         "python_path": "/usr/local/python",
         "poll_interval": 3,
         "connection_delay_interval": 1
@@ -29,6 +30,7 @@ Where:
 
 * `name` is the name for the accessory instance.
 * `projector_ip` is the IP of a JVC projector supporting control over Ethernet based IP.
+* `projector_password` is an optional network password for the JVC projector.
 * `python_path` is the path to python for invoking JVC IP API. Default is `/usr/bin/python`.
 * `poll_interval` is the polling interval in seconds for the power state. Default is `3`.
 * `connection_delay_interval` is the delay in seconds between consecutive connections to the projector. Default is `1`.
