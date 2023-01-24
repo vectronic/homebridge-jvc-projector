@@ -1,5 +1,6 @@
-from jvc_projector import JVCProjector
 import sys
+
+from jvc_projector_remote import JVCProjector
 
 if len(sys.argv) != 2 and len(sys.argv) != 3:
     print('Usage: python ./get_power_state.py <projector_ip> [projector_password]')
