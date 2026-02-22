@@ -1,18 +1,19 @@
 {
   "pluginAlias": "JvcProjectorPower",
-  "pluginType": "accessory",
-  "singular": false,
+  "pluginType": "platform",
+  "singular": true,
   "schema": {
     "type": "object",
     "required": [
       "name",
       "projector_ip"
     ],
-    "additionalProperties": true,
+    "additionalProperties": false,
     "properties": {
       "name": {
         "type": "string",
-        "description": "Name of the accessory instance."
+        "description": "Name of the platform instance.",
+        "default": "JVC Projector"
       },
       "projector_ip": {
         "type": "string",

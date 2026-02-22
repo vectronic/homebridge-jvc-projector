@@ -1,10 +1,10 @@
 # Ignore source code
 src
+.github
+.claude
+eslint.config.js
 
 # ------------- Defaults ------------- #
-
-# eslint
-.eslintrc
 
 # typescript
 tsconfig.json
@@ -130,3 +130,6 @@ dist
 .yarn/unplugged
 .yarn/build-state.yml
 .pnp.*
+
+# test
+test/

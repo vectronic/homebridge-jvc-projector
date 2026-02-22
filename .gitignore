@@ -1,6 +1,9 @@
 # Ignore compiled code
 dist
 
+# Claude
+.claude
+
 # ------------- Defaults ------------- #
 
 # Logs
